@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO;
 
 using NAudio.Wave;
 using NAudio.CoreAudioApi;
@@ -18,7 +19,7 @@ namespace ScottPlotMicrophoneFFT
 
         // MICROPHONE ANALYSIS SETTINGS
         private int RATE = 44100; // sample rate of the sound card
-        private int BUFFERSIZE = (int)Math.Pow(2, 11); // must be a multiple of 2
+        private int BUFFERSIZE = (int)Math.Pow(2, 10); // must be a multiple of 2
 
         // prepare class objects
         public BufferedWaveProvider bwp;
@@ -42,12 +43,12 @@ namespace ScottPlotMicrophoneFFT
 
         public void SetupGraphLabels()
         {
-            scottPlotUC1.fig.labelTitle = "Microphone PCM Data";
+            scottPlotUC1.fig.labelTitle = "RAW Data";
             scottPlotUC1.fig.labelY = "Amplitude (PCM)";
-            scottPlotUC1.fig.labelX = "Time (ms)";
+            scottPlotUC1.fig.labelX = "Time (frame)";
             scottPlotUC1.Redraw();
 
-            scottPlotUC2.fig.labelTitle = "Microphone FFT Data";
+            scottPlotUC2.fig.labelTitle = "FFT Data";
             scottPlotUC2.fig.labelY = "Power (raw)";
             scottPlotUC2.fig.labelX = "Frequency (Hz)";
             scottPlotUC2.Redraw();
@@ -109,15 +110,23 @@ namespace ScottPlotMicrophoneFFT
             double[] pcm = new double[graphPointCount];
             double[] fft = new double[graphPointCount];
             double[] fftReal = new double[graphPointCount/2];
+
+            Random rnd = new Random();
+
+            StreamReader sr = new StreamReader("d:/fitter.txt");
+
             
+                       
+
             // populate Xs and Ys with double data
-            for (int i = 0; i < graphPointCount; i++)
+            for (int i = 0; i < 512; i++)
             {
                 // read the int16 from the two bytes
-                Int16 val = BitConverter.ToInt16(audioBytes, i * 2);
+                //Int16 val = BitConverter.ToInt16(audioBytes, i * 2);
 
+                string line = sr.ReadLine();
                 // store the value in Ys as a percent (+/- 100% = 200%)
-                pcm[i] = (double)(val) / Math.Pow(2,16) * 200.0;
+                pcm[i] = double.Parse(line); // Math.Pow(2,16) * 200.0;
             }
 
             // calculate the full FFT
@@ -133,7 +142,7 @@ namespace ScottPlotMicrophoneFFT
             
             // plot the Xs and Ys for both graphs
             scottPlotUC1.Clear();
-            scottPlotUC1.PlotSignal(pcm, pcmPointSpacingMs, Color.Blue);
+            scottPlotUC1.PlotSignal(pcm, pcmPointSpacingMs, Color.Red);
             scottPlotUC2.Clear();
             scottPlotUC2.PlotSignal(fftReal, fftPointSpacingHz, Color.Blue);
 
